@@ -1,5 +1,4 @@
 console.log('Hello TensorFlow');
-
 /**
  * Get the car data reduced to just the variables we are interested
  * and cleaned of missing data.
@@ -15,6 +14,7 @@ async function getData() {
   
   return cleaned;
 }
+//console.log(getData())
 
 async function run() {
   // Load and plot the original input data that we are going to train on.
@@ -34,37 +34,39 @@ async function run() {
     }
   );
 
-  // More code will be added below
-  // Create the model
-const model = createModel();  
-tfvis.show.modelSummary({name: 'Model Summary'}, model);
-}
+  function createModel() {
+      // Create a sequential model
+      const model = tf.sequential(); 
 
-// Convert the data to a form we can use for training.
-const tensorData = convertToTensor(data);
-const {inputs, labels} = tensorData;
+      // Add a single hidden layer
+      model.add(tf.layers.dense({inputShape: [1], units: 1, useBias: true}));
+      model.add(tf.layers.dense({units: 50, activation: 'sigmoid'}));
+      model.add(tf.layers.dense({units: 50, activation: 'sigmoid'}));
+      model.add(tf.layers.dense({units: 50, activation: 'sigmoid'}));
+      model.add(tf.layers.dense({units: 50, activation: 'sigmoid'}));
+      // Add an output layer
+      model.add(tf.layers.dense({units: 1, useBias: true}));
+
+      return model;
+  }
     
-// Train the model  
-await trainModel(model, inputs, labels);
-console.log('Done Training');
+  // Create the model
+  const model = createModel();  
+  tfvis.show.modelSummary({name: 'Model Summary'}, model);
+    
+  // Convert the data to a form we can use for training.
+  const tensorData = convertToTensor(data);
+  const {inputs, labels} = tensorData;
+    
+  // Train the model  
+  await trainModel(model, inputs, labels);
+  console.log('Done Training');
+    
+  // Make some predictions using the model and compare them to the
+  // original data
+  testModel(model, data, tensorData);
+} // end of RUN
 
-
-// Make some predictions using the model and compare them to the
-// original data
-testModel(model, data, tensorData);
-
-function createModel() {
-  // Create a sequential model
-  const model = tf.sequential(); 
-  
-  // Add a single hidden layer
-  model.add(tf.layers.dense({inputShape: [1], units: 1, useBias: true}));
-  
-  // Add an output layer
-  model.add(tf.layers.dense({units: 1, useBias: true}));
-
-  return model;
-}
 
 /**
  * Convert the input data to tensors that we can use for machine 
@@ -116,8 +118,8 @@ async function trainModel(model, inputs, labels) {
     metrics: ['mse'],
   });
   
-  const batchSize = 32;
-  const epochs = 50;
+  const batchSize = 40;
+  const epochs = 80;
   
   return await model.fit(inputs, labels, {
     batchSize,
@@ -130,6 +132,7 @@ async function trainModel(model, inputs, labels) {
     )
   });
 }
+
 
 function testModel(model, inputData, normalizationData) {
   const {inputMax, inputMin, labelMin, labelMax} = normalizationData;  
@@ -174,5 +177,6 @@ function testModel(model, inputData, normalizationData) {
     }
   );
 }
+
 
 document.addEventListener('DOMContentLoaded', run);
